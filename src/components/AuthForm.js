@@ -1,11 +1,13 @@
+// src/components/AuthForm.js
 import React, { useState } from "react";
-import { auth } from "../firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 
-function AuthForm() {
+const AuthForm = () => {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLogin, setIsLogin] = useState(true);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,40 +18,43 @@ function AuthForm() {
         await createUserWithEmailAndPassword(auth, email, password);
       }
     } catch (err) {
-      alert(err.message);
+      console.error(err.message);
+      setError(err.message);
     }
   };
 
   return (
     <div>
-      <h1>{isLogin ? "Login" : "Sign Up"}</h1>
+      <h2>{isLogin ? "Login" : "Sign Up"}</h2>
       <form onSubmit={handleSubmit}>
         <input
-          placeholder="Email"
           type="email"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        /><br />
         <input
-          placeholder="Password"
           type="password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        /><br />
         <button type="submit">{isLogin ? "Login" : "Sign Up"}</button>
       </form>
-
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <p>
         {isLogin ? "Don't have an account?" : "Already have an account?"}
-        <button onClick={() => setIsLogin(!isLogin)} style={{ marginLeft: "0.5rem" }}>
+        <button onClick={() => setIsLogin(!isLogin)}>
           {isLogin ? "Sign Up" : "Login"}
         </button>
       </p>
     </div>
   );
-}
+};
 
 export default AuthForm;
+
+
+
+
 

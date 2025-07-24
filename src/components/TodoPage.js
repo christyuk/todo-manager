@@ -1,73 +1,77 @@
 import React, { useEffect, useState } from "react";
-import TaskInput from "./TaskInput";
-import { db, auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { signOut } from "firebase/auth";
 import {
   collection,
   addDoc,
-  deleteDoc,
-  onSnapshot,
-  doc,
   query,
-  orderBy
+  onSnapshot,
+  deleteDoc,
+  doc,
+  where,
 } from "firebase/firestore";
-import { signOut } from "firebase/auth"; // 👈 import signOut
-import { useNavigate } from "react-router-dom";
 
 function TodoPage() {
+  const [task, setTask] = useState("");
   const [todos, setTodos] = useState([]);
-  const [editingTask] = useState(null);
-  const navigate = useNavigate();
 
-  // ✅ Logout function
-  const handleLogout = async () => {
-    await signOut(auth);
-    navigate("/login");
-  };
+  const user = auth.currentUser;
 
+  // 🔁 Fetch Todos
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user) navigate("/login");
-    });
-    return () => unsubscribe();
-  }, [navigate]);
+    if (!user) return;
 
-  useEffect(() => {
-    const q = query(collection(db, "todos"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "todos"), where("uid", "==", user.uid));
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setTodos(list);
+      const todosArr = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTodos(todosArr);
     });
-    return () => unsubscribe();
-  }, []);
 
-  const addTask = async (task) => {
-    await addDoc(collection(db, "todos"), task);
+    return () => unsubscribe();
+  }, [user]);
+
+  // ➕ Add Todo
+  const handleAdd = async () => {
+    if (task.trim() === "") return;
+
+    await addDoc(collection(db, "todos"), {
+      text: task,
+      uid: user.uid,
+      createdAt: new Date(),
+    });
+
+    setTask("");
   };
 
-  const deleteTask = async (id) => {
+  // ❌ Delete Todo
+  const handleDelete = async (id) => {
     await deleteDoc(doc(db, "todos", id));
   };
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h1>Your Todo List</h1>
-        <button onClick={handleLogout} style={{ height: "2rem" }}>
-          Logout
-        </button>
+    <div>
+      <h2>Welcome, {user?.email}</h2>
+      <button onClick={() => signOut(auth)}>Logout</button>
+
+      <div>
+        <input
+          type="text"
+          value={task}
+          onChange={(e) => setTask(e.target.value)}
+          placeholder="Add new task"
+        />
+        <button onClick={handleAdd}>Add</button>
       </div>
 
-      <TaskInput addTask={addTask} editingTask={editingTask} updateTask={() => {}} />
       <ul>
         {todos.map((todo) => (
           <li key={todo.id}>
             {todo.text}
-            <button
-              onClick={() => deleteTask(todo.id)}
-              style={{ marginLeft: "1rem", color: "red" }}
-            >
-              Delete
-            </button>
+            <button onClick={() => handleDelete(todo.id)}>❌</button>
           </li>
         ))}
       </ul>
@@ -76,6 +80,10 @@ function TodoPage() {
 }
 
 export default TodoPage;
+
+
+
+
 
 
 
