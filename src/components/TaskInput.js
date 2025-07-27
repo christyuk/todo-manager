@@ -1,39 +1,47 @@
-import React, { useState, useEffect } from "react";
+import { useState } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
-function TaskInput({ addTask, editingTask, updateTask }) {
-  const [taskText, setTaskText] = useState("");
+function TaskInput() {
+  const [text, setText] = useState('');
+  const [user] = useAuthState(auth);
 
-  useEffect(() => {
-    if (editingTask) {
-      setTaskText(editingTask.text);
-    }
-  }, [editingTask]);
-
-  const handleSubmit = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
-    const task = {
-      text: taskText,
-      createdAt: new Date()
-    };
-    editingTask ? updateTask(task) : addTask(task);
-    setTaskText("");
+    if (!text.trim()) return;
+
+    await addDoc(collection(db, 'todos'), {
+      text,
+      completed: false,
+      createdAt: serverTimestamp(),
+      uid: user.uid,
+    });
+
+    setText('');
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleAdd} className="flex items-center gap-2 mb-6">
       <input
         type="text"
-        value={taskText}
-        placeholder="Enter todo"
-        onChange={(e) => setTaskText(e.target.value)}
-        required
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Add a new task..."
+        className="flex-1 border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
       />
-      <button type="submit">{editingTask ? "Update" : "Add"}</button>
+      <button
+        type="submit"
+        className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition"
+      >
+        Add
+      </button>
     </form>
   );
 }
 
 export default TaskInput;
+
 
 
 

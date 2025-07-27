@@ -1,28 +1,45 @@
-import React, { useEffect, useState } from "react";
-import AuthForm from "./components/AuthForm";
-import TodoPage from "./components/TodoPage";
-import { auth } from "./firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Home from './components/Home';
+import Todos from './components/TodosPage';
+import Login from './components/LoginPage';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
   return (
-    <div className="App">
-      {user ? <TodoPage /> : <AuthForm />}
-    </div>
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/todos"
+          element={
+            <PrivateRoute>
+              <Todos />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    </Router>
   );
 }
 
 export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // trigger redeploy
 
 
