@@ -14,6 +14,10 @@ A sleek React app for managing todos — with Firebase Authentication, real-time
 
 ---
 
+🌐 Live Demo
+Check out the live app here:
+🔗 https://todo-auth-app-b7e77.web.app
+
 ## 📸 Screenshots
 
 ### 🏠 Login Page  
